@@ -5,9 +5,9 @@ namespace App\Listeners;
 use App\Events\QuoteCreated;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use App\QuoteLog;
+use Illuminate\Support\Facades\Mail;
 
-class CreateLogEntry
+class SendUserNotification
 {
     /**
      * Create the event listener.
@@ -28,8 +28,16 @@ class CreateLogEntry
     public function handle(QuoteCreated $event)
     {
         $author = $event->author_name;
-        $log_entry = new QuoteLog();
-        $log_entry->author = $author;
-        $log_entry->save();
+        $email = $event->author_email;
+
+        Mail::send(
+            'email.user_notification',
+            ['name' => $author],
+            function($message) use ($email, $author) {
+                $message->from('admin@learnlaravel.com', 'Admin');
+                $message->to($email, $author);
+                $message->subject('Thank you for your quote!');
+            }
+        );
     }
 }
